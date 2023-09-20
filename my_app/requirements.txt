@@ -1,4 +1,6 @@
 django
 pillow
 gunicorn
+python-decouple
+psycopg2-binary
 
