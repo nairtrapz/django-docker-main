@@ -26,4 +26,4 @@ jobs:
         pip install django pillow gunicorn python-decouple psycopg2-binary django-environ
     - name: python-django
       run: |
-         python3 manage.py 
+         python manage.py 
