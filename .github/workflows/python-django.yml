@@ -34,3 +34,15 @@ jobs:
          registry: docker.io
          username: ${{ secrets.DOCKER_USERNAME }}
          password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+    - name: Deploy to Server
+      run: |
+        chmod 600 ssh_key
+        eval "$(ssh-agent -s)"
+        ssh-add ssh_key
+        ssh -o StrictHostKeyChecking=no ubuntu@ec2-3-87-225-168.compute-1.amazonaws.com "cd /home/ubuntu/django-docker-main && git pull origin main"
+    - env:
+      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      
