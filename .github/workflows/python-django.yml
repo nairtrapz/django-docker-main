@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - main
-
+  workflow_dispatch:
 
 jobs:
   build:
@@ -24,6 +24,19 @@ jobs:
       run:
         python -m pip install
         pip install django pillow gunicorn python-decouple psycopg2-binary django-environ
+        
+    - name: install ssh keys
+      # check this thread to understand why its needed:
+      # https://stackoverflow.com/a/70447517
+      run: |
+        install -m 600 -D /dev/null ~/.ssh/id_rsa
+        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+        ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
+    - name: connect and pull
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
+    - name: cleanup
+      run: rm -rf ~/.ssh
+
     - name: python-django
       run: |
          python manage.py
@@ -34,15 +47,6 @@ jobs:
          registry: docker.io
          username: ${{ secrets.DOCKER_USERNAME }}
          password: ${{ secrets.DOCKER_PASSWORD }}
-    - name: Checkout Repository
-      uses: actions/checkout@v2
-    - name: Deploy to Server
-      run: |
-        chmod 600 ssh_key
-        eval "$(ssh-agent -s)"
-        ssh-add ssh_key
-        ssh -o StrictHostKeyChecking=no ubuntu@ec2-3-87-225-168.compute-1.amazonaws.com "cd /home/ubuntu/django-docker-main && git pull origin main"
-    - env:
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      
+
+
